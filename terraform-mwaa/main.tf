@@ -3,38 +3,46 @@ provider "aws" {
 }
 
 locals {
-  creation_time = timestamp()
-  common_tags = {
-    App          = "mwaa-terraform"
-    CreationTime = local.creation_time
-  }
+  utc_time          = timestamp()
+  est_time          = timeadd(local.utc_time, "-5h")
+  creation_time_est = formatdate("YYYY-MM-DD HH:mm:ss", local.est_time)
 }
 
+# -------------------------------
+# 1. VPC & Networking Resources
+# -------------------------------
 resource "aws_vpc" "mwaa_vpc" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_support   = true
   enable_dns_hostnames = true
-  tags = merge({
-    Name = "mwaa-vpc-mwaa-terraform"
-  }, local.common_tags)
+  tags = {
+    Name         = "mwaa-vpc-mwaa-terraform"
+    App          = "mwaa-terraform"
+    CreationTime = local.creation_time_est
+  }
 }
 
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.mwaa_vpc.id
-  tags = merge({
-    Name = "igw-mwaa-terraform"
-  }, local.common_tags)
+  tags = {
+    Name         = "igw-mwaa-terraform"
+    App          = "mwaa-terraform"
+    CreationTime = local.creation_time_est
+  }
 }
 
 resource "aws_route_table" "public_rt" {
   vpc_id = aws_vpc.mwaa_vpc.id
+  tags = {
+    Name         = "public-rt-mwaa-terraform"
+    App          = "mwaa-terraform"
+    CreationTime = local.creation_time_est
+  }
+
   route {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.igw.id
   }
-  tags = merge({
-    Name = "public-rt-mwaa-terraform"
-  }, local.common_tags)
 }
 
 resource "aws_subnet" "public_a" {
@@ -42,9 +50,11 @@ resource "aws_subnet" "public_a" {
   cidr_block              = "10.0.1.0/24"
   availability_zone       = "us-east-1a"
   map_public_ip_on_launch = true
-  tags = merge({
-    Name = "public-a-mwaa-terraform"
-  }, local.common_tags)
+  tags = {
+    Name         = "public-a-mwaa-terraform"
+    App          = "mwaa-terraform"
+    CreationTime = local.creation_time_est
+  }
 }
 
 resource "aws_subnet" "public_b" {
@@ -52,9 +62,11 @@ resource "aws_subnet" "public_b" {
   cidr_block              = "10.0.2.0/24"
   availability_zone       = "us-east-1b"
   map_public_ip_on_launch = true
-  tags = merge({
-    Name = "public-b-mwaa-terraform"
-  }, local.common_tags)
+  tags = {
+    Name         = "public-b-mwaa-terraform"
+    App          = "mwaa-terraform"
+    CreationTime = local.creation_time_est
+  }
 }
 
 resource "aws_route_table_association" "pub_a" {
@@ -68,46 +80,57 @@ resource "aws_route_table_association" "pub_b" {
 }
 
 resource "aws_eip" "nat_eip" {
-  tags = merge({
-    Name = "nat-eip-mwaa-terraform"
-  }, local.common_tags)
+  tags = {
+    Name         = "nat-eip-mwaa-terraform"
+    App          = "mwaa-terraform"
+    CreationTime = local.creation_time_est
+  }
 }
 
 resource "aws_nat_gateway" "nat" {
   allocation_id = aws_eip.nat_eip.id
   subnet_id     = aws_subnet.public_a.id
-  tags = merge({
-    Name = "nat-gateway-mwaa-terraform"
-  }, local.common_tags)
+  tags = {
+    Name         = "nat-gateway-mwaa-terraform"
+    App          = "mwaa-terraform"
+    CreationTime = local.creation_time_est
+  }
 }
 
 resource "aws_route_table" "private_rt" {
   vpc_id = aws_vpc.mwaa_vpc.id
+  tags = {
+    Name         = "private-rt-mwaa-terraform"
+    App          = "mwaa-terraform"
+    CreationTime = local.creation_time_est
+  }
+
   route {
     cidr_block     = "0.0.0.0/0"
     nat_gateway_id = aws_nat_gateway.nat.id
   }
-  tags = merge({
-    Name = "private-rt-mwaa-terraform"
-  }, local.common_tags)
 }
 
 resource "aws_subnet" "private_a" {
   vpc_id            = aws_vpc.mwaa_vpc.id
   cidr_block        = "10.0.3.0/24"
   availability_zone = "us-east-1a"
-  tags = merge({
-    Name = "private-a-mwaa-terraform"
-  }, local.common_tags)
+  tags = {
+    Name         = "private-a-mwaa-terraform"
+    App          = "mwaa-terraform"
+    CreationTime = local.creation_time_est
+  }
 }
 
 resource "aws_subnet" "private_b" {
   vpc_id            = aws_vpc.mwaa_vpc.id
   cidr_block        = "10.0.4.0/24"
   availability_zone = "us-east-1b"
-  tags = merge({
-    Name = "private-b-mwaa-terraform"
-  }, local.common_tags)
+  tags = {
+    Name         = "private-b-mwaa-terraform"
+    App          = "mwaa-terraform"
+    CreationTime = local.creation_time_est
+  }
 }
 
 resource "aws_route_table_association" "priv_a" {
@@ -138,21 +161,31 @@ resource "aws_security_group" "mwaa_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = merge({
-    Name = "mwaa-sg-mwaa-terraform"
-  }, local.common_tags)
+  tags = {
+    Name         = "mwaa-sg-mwaa-terraform"
+    App          = "mwaa-terraform"
+    CreationTime = local.creation_time_est
+  }
 }
 
+# -------------------------------
+# 2. S3 Bucket for DAGs
+# -------------------------------
 resource "aws_s3_bucket" "mwaa_dags" {
   bucket        = "my-mwaa-dags-bucket-unique-123456"
   force_destroy = true
-  tags = merge({
-    Name = "mwaa-dags-mwaa-terraform"
-  }, local.common_tags)
+  tags = {
+    Name         = "mwaa-dags-mwaa-terraform"
+    App          = "mwaa-terraform"
+    CreationTime = local.creation_time_est
+  }
 }
 
+# -------------------------------
+# 3. IAM Role & Inline Policy
+# -------------------------------
 resource "aws_iam_role" "mwaa_execution_role" {
-  name = "mwaa-execution-role-mwaa-terraform"
+  name = "mwaa-execution-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
@@ -165,9 +198,11 @@ resource "aws_iam_role" "mwaa_execution_role" {
     }]
   })
 
-  tags = merge({
-    Name = "mwaa-execution-role-mwaa-terraform"
-  }, local.common_tags)
+  tags = {
+    Name         = "mwaa-execution-role-mwaa-terraform"
+    App          = "mwaa-terraform"
+    CreationTime = local.creation_time_est
+  }
 }
 
 resource "aws_iam_role_policy" "mwaa_inline_policy" {
@@ -179,23 +214,42 @@ resource "aws_iam_role_policy" "mwaa_inline_policy" {
     Statement = [
       {
         Effect = "Allow",
-        Action = ["s3:GetObject", "s3:ListBucket"],
-        Resource = [aws_s3_bucket.mwaa_dags.arn, "${aws_s3_bucket.mwaa_dags.arn}/*"]
+        Action = [
+          "s3:GetObject",
+          "s3:ListBucket"
+        ],
+        Resource = [
+          aws_s3_bucket.mwaa_dags.arn,
+          "${aws_s3_bucket.mwaa_dags.arn}/*"
+        ]
       },
       {
         Effect = "Allow",
-        Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"],
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ],
         Resource = "*"
       },
       {
         Effect = "Allow",
-        Action = ["s3:GetAccountPublicAccessBlock", "s3:GetBucketPublicAccessBlock"],
-        Resource = ["*", aws_s3_bucket.mwaa_dags.arn]
+        Action = [
+          "s3:GetAccountPublicAccessBlock",
+          "s3:GetBucketPublicAccessBlock"
+        ],
+        Resource = [
+          "*",
+          aws_s3_bucket.mwaa_dags.arn
+        ]
       }
     ]
   })
 }
 
+# -------------------------------
+# 4. MWAA Environment
+# -------------------------------
 resource "aws_mwaa_environment" "mwaa" {
   name                    = "example-mwaa"
   airflow_version         = "2.7.2"
@@ -214,18 +268,35 @@ resource "aws_mwaa_environment" "mwaa" {
   }
 
   logging_configuration {
-    dag_processing_logs { enabled = true log_level = "INFO" }
-    scheduler_logs      { enabled = true log_level = "INFO" }
-    task_logs           { enabled = true log_level = "INFO" }
-    webserver_logs      { enabled = true log_level = "INFO" }
-    worker_logs         { enabled = true log_level = "INFO" }
+    dag_processing_logs {
+      enabled   = true
+      log_level = "INFO"
+    }
+    scheduler_logs {
+      enabled   = true
+      log_level = "INFO"
+    }
+    task_logs {
+      enabled   = true
+      log_level = "INFO"
+    }
+    webserver_logs {
+      enabled   = true
+      log_level = "INFO"
+    }
+    worker_logs {
+      enabled   = true
+      log_level = "INFO"
+    }
   }
 
   airflow_configuration_options = {
     "core.default_timezone" = "utc"
   }
 
-  tags = merge({
-    Name = "example-mwaa-mwaa-terraform"
-  }, local.common_tags)
+  tags = {
+    Name         = "example-mwaa-mwaa-terraform"
+    App          = "mwaa-terraform"
+    CreationTime = local.creation_time_est
+  }
 }
