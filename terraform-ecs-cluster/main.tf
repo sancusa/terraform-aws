@@ -190,6 +190,59 @@ resource "aws_cloudwatch_log_group" "ecs_logs" {
   tags = local.common_tags
 }
 
+# ECR Repository
+resource "aws_ecr_repository" "app_repo" {
+  name = "app-repo-${local.name_suffix}"
+
+  tags = merge(local.common_tags, {
+    Name = "ecr-repo-${local.name_suffix}"
+  })
+}
+
+# ECS Task Definition
+resource "aws_ecs_task_definition" "app" {
+  family                   = "app-task-${local.name_suffix}"
+  requires_compatibilities = ["FARGATE"]
+  network_mode             = "awsvpc"
+  cpu                      = "256"
+  memory                   = "512"
+  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
+  container_definitions    = jsonencode([
+    {
+      name      = "app-container"
+      image     = "${aws_ecr_repository.app_repo.repository_url}:latest"
+      essential = true
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          awslogs-group         = aws_cloudwatch_log_group.ecs_logs.name
+          awslogs-region        = "us-east-1"
+          awslogs-stream-prefix = "app"
+        }
+      }
+    }
+  ])
+
+  tags = local.common_tags
+}
+
+# ECS Service
+resource "aws_ecs_service" "app_service" {
+  name            = "app-service-${local.name_suffix}"
+  cluster         = aws_ecs_cluster.cluster.id
+  task_definition = aws_ecs_task_definition.app.arn
+  launch_type     = "FARGATE"
+  desired_count   = 1
+
+  network_configuration {
+    subnets          = aws_subnet.private[*].id
+    security_groups  = [aws_security_group.ecs_tasks.id]
+    assign_public_ip = true
+  }
+
+  tags = local.common_tags
+}
+
 # Outputs
 output "ecs_cluster_name" {
   value = aws_ecs_cluster.cluster.name
@@ -205,4 +258,12 @@ output "vpc_id" {
 
 output "private_subnet_ids" {
   value = aws_subnet.private[*].id
+}
+
+output "ecr_repo_url" {
+  value = aws_ecr_repository.app_repo.repository_url
+}
+
+output "ecs_service_name" {
+  value = aws_ecs_service.app_service.name
 }
