@@ -119,19 +119,28 @@ resource "aws_route_table_association" "private" {
 
 # Security Group for MWAA
 resource "aws_security_group" "mwaa" {
-  name        = "sg-mwaa-${local.name_suffix}"
+  name        = "mwaa-sg-${local.name_suffix}"
   description = "Security group for MWAA environment"
   vpc_id      = aws_vpc.vpc.id
+  
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    self        = true
+    description = "Allow all traffic within the security group"
+  }
   
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow all outbound traffic"
   }
   
   tags = merge(local.common_tags, {
-    Name = "sg-mwaa-${local.name_suffix}"
+    Name = "mwaa-sg-${local.name_suffix}"
   })
 }
 
@@ -159,6 +168,13 @@ resource "aws_s3_bucket_public_access_block" "mwaa" {
   restrict_public_buckets = true
 }
 
+# Create DAGs folder in S3
+resource "aws_s3_object" "dags_folder" {
+  bucket  = aws_s3_bucket.mwaa.id
+  key     = "dags/"
+  content = ""
+}
+
 # IAM role for MWAA
 resource "aws_iam_role" "mwaa_service_role" {
   name = "mwaa-service-role-${local.name_suffix}"
@@ -179,9 +195,53 @@ resource "aws_iam_role" "mwaa_service_role" {
   tags = local.common_tags
 }
 
+# Create MWAA execution policy
+resource "aws_iam_policy" "mwaa_execution_policy" {
+  name = "mwaa-execution-policy-${local.name_suffix}"
+  
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "airflow:*",
+          "s3:*",
+          "logs:*",
+          "cloudwatch:*",
+          "ec2:DescribeSecurityGroups",
+          "ec2:DescribeSubnets",
+          "ec2:DescribeVpcs",
+          "ec2:DescribeNetworkInterfaces",
+          "ec2:CreateNetworkInterface",
+          "ec2:DeleteNetworkInterface",
+          "kms:Decrypt",
+          "kms:DescribeKey",
+          "kms:GenerateDataKey*",
+          "kms:Encrypt",
+          "sqs:ChangeMessageVisibility",
+          "sqs:DeleteMessage",
+          "sqs:GetQueueAttributes",
+          "sqs:GetQueueUrl",
+          "sqs:ReceiveMessage",
+          "sqs:SendMessage",
+          "iam:PassRole"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
 resource "aws_iam_role_policy_attachment" "mwaa_policy" {
   role       = aws_iam_role.mwaa_service_role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonMWAAServiceRolePolicy"
+  policy_arn = aws_iam_policy.mwaa_execution_policy.arn
+}
+
+# Also attach the AmazonMWAAServiceRolePolicy managed policy
+resource "aws_iam_role_policy_attachment" "mwaa_service_policy" {
+  role       = aws_iam_role.mwaa_service_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonMWAAFullConsoleAccess"
 }
 
 # MWAA Environment
@@ -232,6 +292,10 @@ resource "aws_mwaa_environment" "mwaa" {
   }
   
   tags = local.common_tags
+  
+  depends_on = [
+    aws_s3_object.dags_folder
+  ]
 }
 
 # IAM role for EKS
