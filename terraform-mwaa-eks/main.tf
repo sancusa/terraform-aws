@@ -175,7 +175,7 @@ resource "aws_s3_object" "dags_folder" {
   content = ""
 }
 
-# IAM role for MWAA
+# Fix the IAM role for MWAA
 resource "aws_iam_role" "mwaa_service_role" {
   name = "mwaa-service-role-${local.name_suffix}"
   
@@ -186,7 +186,7 @@ resource "aws_iam_role" "mwaa_service_role" {
         Action = "sts:AssumeRole"
         Effect = "Allow"
         Principal = {
-          Service = "airflow.amazonaws.com"
+          Service = "airflow-env.amazonaws.com"  # Changed from airflow.amazonaws.com
         }
       }
     ]
@@ -236,12 +236,6 @@ resource "aws_iam_policy" "mwaa_execution_policy" {
 resource "aws_iam_role_policy_attachment" "mwaa_policy" {
   role       = aws_iam_role.mwaa_service_role.name
   policy_arn = aws_iam_policy.mwaa_execution_policy.arn
-}
-
-# Also attach the AmazonMWAAServiceRolePolicy managed policy
-resource "aws_iam_role_policy_attachment" "mwaa_service_policy" {
-  role       = aws_iam_role.mwaa_service_role.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonMWAAFullConsoleAccess"
 }
 
 # MWAA Environment
@@ -381,6 +375,7 @@ resource "aws_eks_fargate_profile" "main" {
   
   tags = local.common_tags
 }
+
 
 # Outputs
 output "mwaa_webserver_url" {
