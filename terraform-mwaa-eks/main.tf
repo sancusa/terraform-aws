@@ -245,6 +245,9 @@ resource "aws_mwaa_environment" "mwaa" {
   source_bucket_arn  = aws_s3_bucket.mwaa.arn
   
   dag_s3_path        = "dags/"
+
+  # Set webserver access mode to PUBLIC_NETWORK
+  webserver_access_mode = "PUBLIC_NETWORK"  
   
   # Cost optimized - smallest environment class
   environment_class  = "mw1.small"
@@ -261,27 +264,27 @@ resource "aws_mwaa_environment" "mwaa" {
   logging_configuration {
     dag_processing_logs {
       enabled   = true
-      log_level = "WARNING"
+      log_level = "INFO"
     }
     
     scheduler_logs {
       enabled   = true
-      log_level = "WARNING"
+      log_level = "INFO"
     }
     
     task_logs {
       enabled   = true
-      log_level = "WARNING"
+      log_level = "INFO"
     }
     
     webserver_logs {
       enabled   = true
-      log_level = "WARNING"
+      log_level = "INFO"
     }
     
     worker_logs {
       enabled   = true
-      log_level = "WARNING"
+      log_level = "INFO"
     }
   }
   
