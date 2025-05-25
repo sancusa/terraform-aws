@@ -1,0 +1,29 @@
+apiVersion: v1
+clusters:
+- cluster:
+    certificate-authority-data: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURCVENDQWUyZ0F3SUJBZ0lJYVRVb1hNUVF2MUl3RFFZSktvWklodmNOQVFFTEJRQXdGVEVUTUJFR0ExVUUKQXhNS2EzVmlaWEp1WlhSbGN6QWVGdzB5TlRBMU1qVXdOVE15TWpSYUZ3MHpOVEExTWpNd05UTTNNalJhTUJVeApFekFSQmdOVkJBTVRDbXQxWW1WeWJtVjBaWE13Z2dFaU1BMEdDU3FHU0liM0RRRUJBUVVBQTRJQkR3QXdnZ0VLCkFvSUJBUUNlVG9qSTNXN2cvM0pOMkpqMSt1QWdxNFo0RFZLY3hZVThlamwwUmVIN0lEaTVUZnBnUndkOGllRUEKQXJmcFJudExjTi9EMllUUUd3UUlsbC90U0VybTZDSE5lNjJoc0xwRjZWdHVJSVVNVWcydDBuODFhY0MzZ3ZhVQo2L0NHR00waXo5aEhnaEVwSVQxZmRyYUJZR1dNZmFsdzlBeWtXMjNud0EralZJV3hKSUltUEFsMWVwOGJVVHRPCmN0OExVYnZ2VHRXUG1SRHBoQ2svM3FtNDlYWlZ3Z1p1VUJlOUlEWFd2eXk3UGV6ZFpIV0lacEZqSkF1elUwZFoKQU1TbnB1RmwzUFlwamw0dnI1Vlp3UEU2c2xwM0NPYjh0RnZETDJEMHM2OXVoZGZzb0ZFTTBhcHdPbUJsTzhZbQphekw1RUtPQUpEd2pMR2lNR0orNHZOWi9FWTMvQWdNQkFBR2pXVEJYTUE0R0ExVWREd0VCL3dRRUF3SUNwREFQCkJnTlZIUk1CQWY4RUJUQURBUUgvTUIwR0ExVWREZ1FXQkJSM0ZWQm10eWIvbWdNRkdIb0tNWGZId2plcDJEQVYKQmdOVkhSRUVEakFNZ2dwcmRXSmxjbTVsZEdWek1BMEdDU3FHU0liM0RRRUJDd1VBQTRJQkFRQWJlSnhUb1Y2YQpPRnFrVmoxa2EyVUI1T3JVZkxTdlMvR1ZCQXA5MU80NEUwNTBJeVloZFkrOG1RNm1teGFQVnNmTk9yZlpMNnNqCjBaeTBHZlZiZnNITFJ1VCs4ZkJ3NGZ1RWgxVWVPZFVMa0FrWkFLNGNTKzNmRm9ZWlNkUXhkS0RSTlM4T1hGQ0IKdUE1MnpqWDdBMmQ2QXBGcTNwdjJMZjJhaVdsSEhlRkdTQ2lEMTA5Z2pWeFF5Wm95U1FNSmFJeDlySFcwY09iZwp2dmFqVXlpOGxudHJNL3pqQmJzN0pIR1VZaEJ1b2ZQSVpCTXZDL3RPMnhKS2l2NmlFNjlIby9ORjhSSmFRZmlhCnh1dGtRbEVsd0xRWDU5a3BFWTc3THk0cmJaOGxjdHFnRTFPdld2UXEraVFSei9QK1BUbTZwejhoMGtqK0pudzEKblJQWEFHMzlKMlp4Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
+    server: https://52614E539E372FFA86C1EA9051C5350D.gr7.us-east-1.eks.amazonaws.com
+  name: arn:aws:eks:us-east-1:613505198708:cluster/eks-cluster-terraform-mwaa-amazonq
+contexts:
+- context:
+    cluster: arn:aws:eks:us-east-1:613505198708:cluster/eks-cluster-terraform-mwaa-amazonq
+    user: arn:aws:eks:us-east-1:613505198708:cluster/eks-cluster-terraform-mwaa-amazonq
+  name: aws
+current-context: aws
+kind: Config
+preferences: {}
+users:
+- name: arn:aws:eks:us-east-1:613505198708:cluster/eks-cluster-terraform-mwaa-amazonq
+  user:
+    exec:
+      apiVersion: client.authentication.k8s.io/v1beta1
+      args:
+      - --region
+      - us-east-1
+      - eks
+      - get-token
+      - --cluster-name
+      - eks-cluster-terraform-mwaa-amazonq
+      - --output
+      - json
+      command: aws

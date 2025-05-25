@@ -348,6 +348,19 @@ resource "aws_eks_cluster" "eks" {
   ]
 }
 
+#ECR
+resource "aws_ecr_repository" "airflow_task_repo" {
+  name = "airflow-mwaa-ecr"
+
+  image_tag_mutability = "MUTABLE"
+  force_delete          = true
+
+  tags = merge(local.common_tags, {
+    Name = "airflow-mwaa-ecr"
+  })
+}
+
+
 # EKS Fargate Profile
 resource "aws_eks_fargate_profile" "main" {
   cluster_name           = aws_eks_cluster.eks.name
