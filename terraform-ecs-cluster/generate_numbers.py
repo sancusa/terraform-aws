@@ -1,3 +1,6 @@
 import random
-for _ in range(2000):
-    print(__file__ + " Random number generated: " + str(random.randint(1, 10000)))
+import time
+
+for i in range(1, 2001):
+    print(f"{__file__} | Iteration {i}: Random number generated: {random.randint(1, 10000)}")
+    time.sleep(0.1)  # to slow down the output a bit
