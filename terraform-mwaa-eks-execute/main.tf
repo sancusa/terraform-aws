@@ -173,6 +173,14 @@ resource "aws_s3_object" "dags_folder" {
   content = ""
 }
 
+resource "aws_s3_object" "mwaa_requirements" {
+  bucket = aws_s3_bucket.mwaa.id
+  key    = "requirements.txt"
+  source = "${path.module}/files/requirements.txt"
+  etag   = filemd5("${path.module}/files/requirements.txt")
+}
+
+
 # IAM Role and Policy for MWAA
 resource "aws_iam_role" "mwaa_service_role" {
   name = "mwaa-service-role-${local.name_suffix}"
@@ -246,6 +254,8 @@ resource "aws_mwaa_environment" "mwaa" {
   max_workers        = 1
   min_workers        = 1
 
+  requirements_s3_path = "requirements.txt"
+  
   network_configuration {
     security_group_ids = [aws_security_group.mwaa.id]
     subnet_ids         = aws_subnet.private[*].id
@@ -299,6 +309,22 @@ resource "aws_iam_role" "eks_cluster" {
     ]
   })
 
+  tags = local.common_tags
+}
+
+resource "aws_iam_role" "mwaa_to_eks" {
+  name = "mwaa-to-eks-role-${local.name_suffix}"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Effect = "Allow",
+      Principal = {
+        Service = "airflow.amazonaws.com"
+      },
+      Action = "sts:AssumeRole"
+    }]
+  })
+  
   tags = local.common_tags
 }
 

@@ -1,5 +1,5 @@
 from airflow import DAG
-from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import KubernetesPodOperator
+from airflow.providers.cncf.kubernetes.operators.pod import KubernetesPodOperator
 from datetime import datetime
 
 with DAG(
@@ -8,7 +8,7 @@ with DAG(
     schedule_interval=None,
     catchup=False,
 ) as dag:
-
+    
     run_task = KubernetesPodOperator(
         task_id="print-random-numbers",
         name="print-random-numbers",
@@ -18,5 +18,6 @@ with DAG(
         arguments=["/app/print_random.py"],
         service_account_name="airflow-irsa",
         get_logs=True,
+        kubernetes_conn_id="kubernetes_default",
         is_delete_operator_pod=True
     )

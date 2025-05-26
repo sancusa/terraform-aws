@@ -7,6 +7,8 @@ default_args = {
     'depends_on_past': False,
 }
 
+kube_config_path = '/usr/local/airflow/dags/kube_config.yaml'
+
 with DAG(
     dag_id='mwaa_run_on_eks',
     default_args=default_args,
@@ -26,5 +28,7 @@ with DAG(
         arguments=['/app/print_random.py'],
         service_account_name='airflow-irsa',
         get_logs=True,
+        config_file=kube_config_path,
+        in_cluster=False,
         is_delete_operator_pod=True,
     )

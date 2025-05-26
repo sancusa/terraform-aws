@@ -26,4 +26,4 @@ users:
       - eks-cluster-terraform-mwaa-amazonq
       - --output
       - json
-      command: /usr/local/airflow/.local/bin/aws
+      command: aws
