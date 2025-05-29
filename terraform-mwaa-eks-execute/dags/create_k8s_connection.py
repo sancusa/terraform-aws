@@ -4,7 +4,7 @@ from airflow.operators.python import PythonOperator
 from airflow.utils.dates import days_ago
 from airflow.utils.session import provide_session
 from sqlalchemy.orm.session import Session
-
+import json
 
 @provide_session
 def create_k8s_conn(session: Session = None):
@@ -15,22 +15,19 @@ def create_k8s_conn(session: Session = None):
         session.delete(existing)
         session.commit()
 
-    # Create a Kubernetes connection using IAM
+    # Use json.dumps to ensure proper formatting
     conn = Connection(
         conn_id=conn_id,
         conn_type="kubernetes",
-        extra="""
-        {
-            "extra__kubernetes__in_cluster": false,
+        extra=json.dumps({
+            "extra__kubernetes__in_cluster": False,
             "extra__kubernetes__namespace": "default",
-            "extra__kubernetes__use_iam_backend": true,
-            "extra__kubernetes__verify_ssl": true
-        }
-        """
+            "extra__kubernetes__use_iam_backend": True,
+            "extra__kubernetes__verify_ssl": True
+        })
     )
     session.add(conn)
     session.commit()
-
 
 with DAG(
     dag_id="create_k8s_connection",

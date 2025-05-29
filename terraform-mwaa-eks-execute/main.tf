@@ -173,14 +173,6 @@ resource "aws_s3_object" "dags_folder" {
   content = ""
 }
 
-resource "aws_s3_object" "mwaa_requirements" {
-  bucket = aws_s3_bucket.mwaa.id
-  key    = "requirements.txt"
-  source = "${path.module}/files/requirements.txt"
-  etag   = filemd5("${path.module}/files/requirements.txt")
-}
-
-
 # IAM Role and Policy for MWAA
 resource "aws_iam_role" "mwaa_service_role" {
   name = "mwaa-service-role-${local.name_suffix}"
